@@ -36,7 +36,7 @@ import path from 'path';
 import { python, pip } from 'python-env';
 
 pip(['install', '-r', path.resolve(__dirname, 'requirements.txt')]).then(async () => {
-  await python(path.resolve(__dirname, 'script.py'));
+  await python([path.resolve(__dirname, 'script.py')]);
 });
 ```
 

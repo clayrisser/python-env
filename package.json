@@ -1,6 +1,6 @@
 {
   "name": "python-env",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Cross platform isolated embedded python environment for npm",
   "keywords": [
     "python-env",
@@ -42,7 +42,7 @@
     "format": "prettier --write ./src/**/*.js",
     "lint": "npm run format && eslint ./",
     "lint:fix": "npm run format && eslint --fix ./",
-    "postinstall": "node lib",
+    "postinstall": "node lib 2>/dev/null || true",
     "prepublish": "npm run clean && npm run build",
     "python-env": "node bin/python-env",
     "start": "babel-node src"

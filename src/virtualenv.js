@@ -3,6 +3,7 @@ import crossSpawn from 'cross-spawn';
 import fetch from 'fetch-everywhere';
 import fs from 'fs';
 import glob from 'glob';
+import pkgDir from 'pkg-dir';
 import ora from 'ora';
 import path from 'path';
 import tar from 'tar';
@@ -11,7 +12,7 @@ export default class Virtualenv {
   constructor({
     virtualenvVersion = '16.1.0',
     version = '3',
-    output = path.resolve(__dirname, '..'),
+    output = path.resolve(pkgDir.sync(__dirname)),
     spinner = true
   }) {
     this.downloadPath = path.resolve(output, 'virtualenv.tar.gz');
@@ -76,7 +77,7 @@ export default class Virtualenv {
   }
 
   async env() {
-    await crossSpawn(
+    return crossSpawn(
       'python',
       [
         path.resolve(this.installerPath, 'src/virtualenv.py'),

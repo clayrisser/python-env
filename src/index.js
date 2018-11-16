@@ -1,4 +1,6 @@
 import Virtualenv from './virtualenv';
+import python from './python';
+import pip from './pip';
 
 async function main() {
   const virtualenv = new Virtualenv({});
@@ -7,5 +9,5 @@ async function main() {
 
 if (typeof require !== 'undefined' && require.main === module) main();
 
-export { Virtualenv };
-export default { Virtualenv };
+export { Virtualenv, python, pip };
+export default { Virtualenv, python, pip };

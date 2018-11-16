@@ -30,6 +30,16 @@ npm install --save python-env
 
 ## Usage
 
+_script.js_
+```js
+import path from 'path';
+import { python, pip } from 'python-env';
+
+pip(['install', '-r', path.resolve(__dirname, 'requirements.txt')]).then(async () => {
+  await python(path.resolve(__dirname, 'script.py'));
+});
+```
+
 _package.json_
 ```sh
 {

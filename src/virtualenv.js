@@ -67,6 +67,7 @@ export default class Virtualenv {
           throw err;
         }
       });
+    await new Promise(r => setTimeout(r, 1000));
     return new Promise((resolve, reject) => {
       glob(path.resolve(this.output, 'pypa-virtualenv-*'), {}, (err, files) => {
         if (err) return reject(err);

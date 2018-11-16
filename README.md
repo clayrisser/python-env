@@ -44,6 +44,7 @@ _package.json_
 ```sh
 {
   "scripts": {
+    "pip:install": "npm run python-pip -- install -r requirements.txt",
     "python:shell": "npm run python-env",
     "python:version": "npm run python-env -- --version"
   }

@@ -1,6 +1,6 @@
 {
   "name": "python-env",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Cross platform isolated embedded python environment for npm",
   "keywords": [
     "python-env",
@@ -27,9 +27,6 @@
     "lib"
   ],
   "main": "lib/index.js",
-  "bin": {
-    "python-env": "env/bin/python"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/codejamninja/python-env"

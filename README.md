@@ -15,6 +15,8 @@ Please ★ this repo if you found it useful ★ ★ ★
 
 ## Installation
 
+This package is not intended to be used as a global dependancy.
+
 ```sh
 npm install --save python-env
 ```
@@ -28,7 +30,15 @@ npm install --save python-env
 
 ## Usage
 
-[Contribute](https://github.com/codejamninja/python-env/blob/master/CONTRIBUTING.md) usage docs
+_package.json_
+```sh
+{
+  "scripts": {
+    "python:shell": "npm run python-env",
+    "python:version": "npm run python-env -- --version"
+  }
+}
+```
 
 
 ## Support

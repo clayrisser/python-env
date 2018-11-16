@@ -31,14 +31,18 @@
   "scripts": {
     "build": "babel src -d lib",
     "clean": "rimraf lib",
+    "format": "prettier --write ./src/**/*.js",
     "lint": "npm run format && eslint ./",
     "lint:fix": "npm run format && eslint --fix ./",
-    "format": "prettier --write ./src/**/*.js",
+    "pip:install": "python-pip install -r src/requirements.txt",
     "prepublish": "npm run clean && npm run build",
+    "python:script": "python-env src/script.py",
+    "python:shell": "python-env",
+    "python:version": "python-env --version",
     "start": "babel-node src"
   },
   "dependencies": {
-    "python-env": "^0.1.6"
+    "python-env": "^0.1.7"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",

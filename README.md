@@ -9,16 +9,22 @@ Please ★ this repo if you found it useful ★ ★ ★
 
 ## Features
 
-* Isolated environment
-* Embdedded environment
+* Isolated embedded python environment
+* Call into python from node
 
 
 ## Installation
 
 This package is not intended to be used as a global dependancy.
 
+_Python 3_
 ```sh
 npm install --save python-env
+```
+
+_Python 2_
+```sh
+npm install --save python-env@python2
 ```
 
 
@@ -32,21 +38,24 @@ npm install --save python-env
 
 _script.js_
 ```js
-import path from 'path';
 import { python, pip } from 'python-env';
 
-pip(['install', '-r', path.resolve(__dirname, 'requirements.txt')]).then(async () => {
-  await python([path.resolve(__dirname, 'script.py')]);
-});
+async function main() {
+  await pip(['install', '-r', 'requirements.txt']);
+  await python(['script.py']);
+}
+
+main();
 ```
 
 _package.json_
 ```sh
 {
   "scripts": {
-    "pip:install": "npm run python-pip -- install -r requirements.txt",
-    "python:shell": "npm run python-env",
-    "python:version": "npm run python-env -- --version"
+    "pip:install": "python-pip -- install -r requirements.txt",
+    "python:script": "python-env -- src/script.py",
+    "python:shell": "python-env",
+    "python:version": "python-env -- --version"
   }
 }
 ```

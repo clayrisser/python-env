@@ -6,3 +6,6 @@ async function main() {
 }
 
 if (typeof require !== 'undefined' && require.main === module) main();
+
+export { Virtualenv };
+export default { Virtualenv };

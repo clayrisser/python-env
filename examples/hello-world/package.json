@@ -42,7 +42,7 @@
     "start": "babel-node src"
   },
   "dependencies": {
-    "python-env": "^0.1.8"
+    "python-env": "python2"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",

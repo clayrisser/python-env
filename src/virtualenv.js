@@ -11,7 +11,7 @@ import tar from 'tar';
 export default class Virtualenv {
   constructor({
     virtualenvVersion = '16.1.0',
-    version = '3',
+    version = '2',
     output = path.resolve(pkgDir.sync(__dirname)),
     spinner = true
   }) {

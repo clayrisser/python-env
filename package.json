@@ -1,6 +1,6 @@
 {
   "name": "python-env",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Cross platform isolated embedded python environment for npm",
   "keywords": [
     "python-env",

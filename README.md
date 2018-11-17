@@ -52,10 +52,10 @@ _package.json_
 ```sh
 {
   "scripts": {
-    "pip:install": "python-pip -- install -r requirements.txt",
-    "python:script": "python-env -- src/script.py",
+    "pip:install": "python-pip install -r requirements.txt",
+    "python:script": "python-env src/script.py",
     "python:shell": "python-env",
-    "python:version": "python-env -- --version"
+    "python:version": "python-env --version"
   }
 }
 ```

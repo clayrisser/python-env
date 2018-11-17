@@ -30,7 +30,7 @@
   },
   "scripts": {
     "build": "babel src -d lib",
-    "clean": "rimraf lib",
+    "clean": "git clean -fXd -e \\!node_modules",
     "format": "prettier --write ./src/**/*.js",
     "lint": "npm run format && eslint ./",
     "lint:fix": "npm run format && eslint --fix ./",
@@ -55,8 +55,7 @@
     "eslint": "^5.5.0",
     "eslint-config-jam": "^0.1.2",
     "eslint-plugin-jsx-a11y": "^6.1.1",
-    "eslint-plugin-react": "^7.11.1",
-    "rimraf": "^2.6.2"
+    "eslint-plugin-react": "^7.11.1"
   },
   "engines": {
     "node": ">=6.0.0"

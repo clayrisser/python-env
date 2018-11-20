@@ -32,25 +32,38 @@ export default class Virtualenv {
   }
 
   async init() {
+    const pythonPath = await this.ensurePython();
+    await this.ensureVirtualenv();
+    await this.env(pythonPath);
+  }
+
+  async ensureVirtualenv() {
+    const virtualenvPath = await this.getVirtualenvPath();
+    if (fs.existsSync(virtualenvPath)) return null;
     this.spinner.start('downloading virtualenv');
     await this.download();
     this.spinner.succeed('downloaded virtualenv');
     this.spinner.start('extracting virtualenv');
-    this.installerPath = await this.extract();
+    await this.extract();
     this.spinner.succeed('extracted virtualenv');
-    const pythonPath = await this.installPython();
-    await this.env(pythonPath);
   }
 
-  async installPython() {
+  async ensurePython() {
     if (os.win) {
+      const pythonPath = path.resolve(this.output, 'python3/python.exe');
+      if (fs.existsSync(path.resolve(this.output, 'python3'))) {
+        return pythonPath;
+      }
+      this.spinner.start('downloading python');
       let pythonDownload = 'https://www.python.org/ftp/python/3.7.1/python-3.7.1-embed-win32.zip';
       if (os.win64) {
         pythonDownload = 'https://www.python.org/ftp/python/3.7.1/python-3.7.1-embed-amd64.zip';
       }
-      const res = await fetch(pythonDownload);
-      if (!res.ok) throw new Err('failed to get python', res.status);
-      const stream = fs.createWriteStream(path.resolve(this.output, 'python3.zip'));
+      let res = await fetch(pythonDownload);
+      if (!res.ok) throw new Err('failed to download python', res.status);
+      let stream = fs.createWriteStream(
+        path.resolve(this.output, 'python3.zip')
+      );
       await new Promise((resolve, reject) => {
         res.body.pipe(stream);
         res.body.on('err', reject);
@@ -65,44 +78,29 @@ export default class Virtualenv {
         stream.on('close', resolve);
         stream.on('error', reject);
       });
-      return path.resolve(this.output, 'python3/python.exe');
-    }
-      const hasPython = await new Promise((resolve, reject) => {
-        const cp = crossSpawn('where python')
-        let message = ''
-        cp.stdout.on('data', (data) => {
-          message += data.toString();
-        });
-        cp.on('close', () => {
-          return resolve(message);
-        });
-        cp.on('error', () => {
-          return resolve(null);
-        });
+      res = await fetch('https://bootstrap.pypa.io/get-pip.py');
+      if (!res.ok) throw new Err('failed to download pip', res.status);
+      stream = fs.createWriteStream(
+        path.resolve(this.output, 'get-pip.py')
+      );
+      await new Promise((resolve, reject) => {
+        res.body.pipe(stream);
+        res.body.on('err', reject);
+        res.body.on('finish', resolve);
       });
-      if (hasPython) return null;
-      const pythonPath = path.resolve(
-        env.USERPROFILE,
-        '.windows-build-tools/python27/python.exe'
-      );
-      if (fs.existsSync(pythonPath)) return null;
-      this.spinner.start('installing python');
-      crossSpawn(
-        'call',
-        [
-          path.resolve(__dirname, '../tools/elevate.bat'),
-          'npm\ install\ --global\ --production\ windows-build-tools'
-        ]
-      );
-      let installed = false;
-      while(!installed) {
-        if (fs.existsSync(pythonPath)) {
-          await new Promise(r => setTimeout(r, 1000));
-          installed = true;
-        }
-      }
-      await new Promise(r => setTimeout(r, 5000));
-      this.spinner.succeed('installed python');
+      this.spinner.succeed('downloaded python');
+      await new Promise((resolve, reject) => {
+        const cp = crossSpawn(
+          pythonPath,
+          [
+            path.resolve(this.output, 'get-pip.py')
+          ],
+          { stdio: 'inherit' }
+        );
+        cp.on('close', resolve);
+        cp.on('error', reject);
+      });
+      return pythonPath;
     }
   }
 
@@ -137,8 +135,14 @@ export default class Virtualenv {
         }
       });
     await new Promise(r => setTimeout(r, 100));
+  }
+
+  async getVirtualenvPath() {
     return new Promise((resolve, reject) => {
-      glob(path.resolve(this.output, 'pypa-virtualenv-*'), {}, (err, files) => {
+      glob(path.resolve(
+        this.output,
+        'pypa-virtualenv-*'
+      ), {}, (err, files) => {
         if (err) return reject(err);
         if (!files || !files.length) return resolve(null);
         return resolve(files[0]);
@@ -147,10 +151,11 @@ export default class Virtualenv {
   }
 
   async env(pythonPath) {
+    const virtualenvPath = await this.getVirtualenvPath();
     return crossSpawn(
       pythonPath || 'python',
       [
-        path.resolve(this.installerPath, 'src/virtualenv.py'),
+        path.resolve(virtualenvPath, 'src/virtualenv.py'),
         ...(!os.win && this.version === '3' ? ['-p', 'python3'] : []),
         'env'
       ],

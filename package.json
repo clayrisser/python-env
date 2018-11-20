@@ -1,6 +1,6 @@
 {
   "name": "python-env",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Cross platform isolated embedded python environment for npm",
   "keywords": [
     "python-env",
@@ -57,9 +57,7 @@
     "js-info": "^0.3.0",
     "ora": "^3.0.0",
     "pkg-dir": "^3.0.0",
-    "python-env": "^0.1.2",
-    "tar": "^4.4.8",
-    "unzip": "^0.1.11"
+    "tar": "^4.4.8"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",

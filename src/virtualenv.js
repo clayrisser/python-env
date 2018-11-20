@@ -143,14 +143,18 @@ export default class Virtualenv {
 
   async env(pythonPath) {
     const virtualenvPath = await this.getVirtualenvPath();
-    return crossSpawn(
-      pythonPath || 'python',
-      [
-        path.resolve(virtualenvPath, 'src/virtualenv.py'),
-        ...(!os.win && this.version === '3' ? ['-p', 'python3'] : []),
-        'env'
-      ],
-      { stdio: 'inherit' }
-    );
+    return new Promise((resolve, reject) => {
+      const cp = crossSpawn(
+        pythonPath || 'python',
+        [
+          path.resolve(virtualenvPath, 'src/virtualenv.py'),
+          ...(!os.win && this.version === '3' ? ['-p', 'python3'] : []),
+          'env'
+        ],
+        { stdio: 'inherit' }
+      );
+      cp.on('close', resolve);
+      cp.on('error', reject);
+    });
   }
 }

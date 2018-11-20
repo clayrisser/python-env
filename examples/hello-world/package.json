@@ -30,7 +30,7 @@
   },
   "scripts": {
     "build": "babel src -d lib",
-    "clean": "git clean -fXd -e \\!node_modules",
+    "clean": "git clean -fXd -e !node_modules -e !node_modules/**/* -e \\!node_modules -e \\!node_modules/**/*",
     "format": "prettier --write ./src/**/*.js",
     "lint": "npm run format && eslint ./",
     "lint:fix": "npm run format && eslint --fix ./",

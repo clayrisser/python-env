@@ -11,6 +11,7 @@ Please ★ this repo if you found it useful ★ ★ ★
 
 * Isolated embedded python environment
 * Call into python from node
+* Works on MacOS, Linux and Microsoft Windows 32 and 64 bit
 
 
 ## Installation

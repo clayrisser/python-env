@@ -47,3 +47,4 @@ yarn.lock
 /pypa-virtualenv-*
 /virtualenv.tar.gz
 /env
+/miniconda.exe

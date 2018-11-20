@@ -3,10 +3,13 @@ import crossSpawn from 'cross-spawn';
 import fetch from 'fetch-everywhere';
 import fs from 'fs';
 import glob from 'glob';
-import pkgDir from 'pkg-dir';
 import ora from 'ora';
 import path from 'path';
+import pkgDir from 'pkg-dir';
 import tar from 'tar';
+import { os } from 'js-info';
+
+const { env } = process;
 
 export default class Virtualenv {
   constructor({
@@ -27,14 +30,71 @@ export default class Virtualenv {
     }
   }
 
+  get minicondaInstaller() {
+    if (os.win) {
+      if (os.win64) {
+        return 'https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe';
+      }
+      return 'https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86.exe';
+    }
+    return '';
+  }
+
   async init() {
+    const pythonPath = await this.ensurePython();
+    await this.ensureVirtualenv();
+    await this.env(pythonPath);
+  }
+
+  async ensureVirtualenv() {
+    const virtualenvPath = await this.getVirtualenvPath();
+    if (fs.existsSync(virtualenvPath)) return null;
     this.spinner.start('downloading virtualenv');
     await this.download();
     this.spinner.succeed('downloaded virtualenv');
     this.spinner.start('extracting virtualenv');
-    this.installerPath = await this.extract();
+    await this.extract();
     this.spinner.succeed('extracted virtualenv');
-    await this.env();
+  }
+
+  async ensurePython() {
+    if (os.win) {
+      const pythonPath = path.resolve(env.USERPROFILE, 'Miniconda3/python.exe');
+      if (fs.existsSync(pythonPath)) return pythonPath;
+      if (!fs.existsSync(path.resolve(this.output, 'miniconda.exe'))) {
+        this.spinner.start('downloading miniconda');
+        let res = await fetch(this.minicondaInstaller);
+        if (!res.ok) throw new Err('failed to download miniconda', res.status);
+        let stream = fs.createWriteStream(
+          path.resolve(this.output, 'miniconda.exe')
+        );
+        await new Promise((resolve, reject) => {
+          res.body.pipe(stream);
+          res.body.on('err', reject);
+          res.body.on('finish', resolve);
+        });
+        await new Promise(r => setTimeout(r, 1000));
+        this.spinner.succeed('downloaded miniconda');
+      }
+      this.spinner.start('installing miniconda');
+      await new Promise((resolve, reject) => {
+        const cp = crossSpawn(
+          path.resolve(this.output, 'miniconda.exe'),
+          [
+            '/InstallationType=JustMe',
+            '/RegisterPython=0',
+            '/S',
+            `/D=${path.resolve(env.USERPROFILE, 'Miniconda3')}`
+          ],
+          { stdio: 'inherit' }
+        );
+        cp.on('close', resolve);
+        cp.on('error', reject);
+      });
+      this.spinner.succeed('installed miniconda');
+      return pythonPath;
+    }
+    return null;
   }
 
   async download() {
@@ -68,6 +128,9 @@ export default class Virtualenv {
         }
       });
     await new Promise(r => setTimeout(r, 100));
+  }
+
+  async getVirtualenvPath() {
     return new Promise((resolve, reject) => {
       glob(path.resolve(this.output, 'pypa-virtualenv-*'), {}, (err, files) => {
         if (err) return reject(err);
@@ -77,15 +140,20 @@ export default class Virtualenv {
     });
   }
 
-  async env() {
-    return crossSpawn(
-      'python',
-      [
-        path.resolve(this.installerPath, 'src/virtualenv.py'),
-        ...(this.version === '3' ? ['-p', 'python3'] : []),
-        'env'
-      ],
-      { stdio: 'inherit' }
-    );
+  async env(pythonPath) {
+    const virtualenvPath = await this.getVirtualenvPath();
+    return new Promise((resolve, reject) => {
+      const cp = crossSpawn(
+        pythonPath || 'python',
+        [
+          path.resolve(virtualenvPath, 'src/virtualenv.py'),
+          ...(!os.win && this.version === '3' ? ['-p', 'python3'] : []),
+          'env'
+        ],
+        { stdio: 'inherit' }
+      );
+      cp.on('close', resolve);
+      cp.on('error', reject);
+    });
   }
 }

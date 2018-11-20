@@ -7,7 +7,6 @@ import ora from 'ora';
 import path from 'path';
 import pkgDir from 'pkg-dir';
 import tar from 'tar';
-import unzip from 'unzip';
 import { os } from 'js-info'
 
 const { env } = process;
@@ -15,7 +14,7 @@ const { env } = process;
 export default class Virtualenv {
   constructor({
     virtualenvVersion = '16.1.0',
-    version = '3',
+    version = '2',
     output = path.resolve(pkgDir.sync(__dirname)),
     spinner = true
   }) {
@@ -29,6 +28,16 @@ export default class Virtualenv {
       this.spinner.stop = f => f;
       this.spinner.succeed = f => f;
     }
+  }
+
+  get minicondaInstaller() {
+    if (os.win) {
+      if (os.win64) {
+        return 'https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86_64.exe';
+      }
+      return 'https://repo.anaconda.com/miniconda/Miniconda3-latest-Windows-x86.exe';
+    }
+    return '';
   }
 
   async init() {
@@ -50,58 +59,40 @@ export default class Virtualenv {
 
   async ensurePython() {
     if (os.win) {
-      const pythonPath = path.resolve(this.output, 'python3/python.exe');
-      if (fs.existsSync(path.resolve(this.output, 'python3'))) {
-        return pythonPath;
+      const pythonPath = path.resolve(env.USERPROFILE, 'Miniconda3/python.exe');
+      if (fs.existsSync(path.resolve(env.USERPROFILE, 'Miniconda3'))) return pythonPath;
+      if (!fs.existsSync(path.resolve(this.output, 'miniconda.exe'))) {
+        this.spinner.start('downloading miniconda');
+        let res = await fetch(this.minicondaInstaller);
+        if (!res.ok) throw new Err('failed to download miniconda', res.status);
+        let stream = fs.createWriteStream(
+          path.resolve(this.output, 'miniconda.exe')
+        );
+        await new Promise((resolve, reject) => {
+          res.body.pipe(stream);
+          res.body.on('err', reject);
+          res.body.on('finish', resolve);
+        });
+        this.spinner.succeed('downloaded miniconda');
       }
-      this.spinner.start('downloading python');
-      let pythonDownload = 'https://www.python.org/ftp/python/3.7.1/python-3.7.1-embed-win32.zip';
-      if (os.win64) {
-        pythonDownload = 'https://www.python.org/ftp/python/3.7.1/python-3.7.1-embed-amd64.zip';
-      }
-      let res = await fetch(pythonDownload);
-      if (!res.ok) throw new Err('failed to download python', res.status);
-      let stream = fs.createWriteStream(
-        path.resolve(this.output, 'python3.zip')
-      );
-      await new Promise((resolve, reject) => {
-        res.body.pipe(stream);
-        res.body.on('err', reject);
-        res.body.on('finish', resolve);
-      });
-      await new Promise((resolve, reject) => {
-        const stream = fs.createReadStream(
-          path.resolve(this.output, 'python3.zip')
-        ).pipe(unzip.Extract({
-          path: path.resolve(this.output, 'python3')
-        }));
-        stream.on('close', resolve);
-        stream.on('error', reject);
-      });
-      res = await fetch('https://bootstrap.pypa.io/get-pip.py');
-      if (!res.ok) throw new Err('failed to download pip', res.status);
-      stream = fs.createWriteStream(
-        path.resolve(this.output, 'get-pip.py')
-      );
-      await new Promise((resolve, reject) => {
-        res.body.pipe(stream);
-        res.body.on('err', reject);
-        res.body.on('finish', resolve);
-      });
-      this.spinner.succeed('downloaded python');
+      this.spinner.start('installing miniconda');
       await new Promise((resolve, reject) => {
         const cp = crossSpawn(
-          pythonPath,
+          path.resolve(this.output, 'miniconda.exe'),
           [
-            path.resolve(this.output, 'get-pip.py')
+            '/InstallationType=JustMe',
+            '/RegisterPython=0',
+            '/S',
+            `/D=${path.resolve(env.USERPROFILE, 'Miniconda3')}`
           ],
           { stdio: 'inherit' }
         );
         cp.on('close', resolve);
         cp.on('error', reject);
       });
-      return pythonPath;
+      this.spinner.succeed('installed miniconda');
     }
+    return pythonPath;
   }
 
   async download() {

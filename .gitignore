@@ -47,3 +47,5 @@ yarn.lock
 /pypa-virtualenv-*
 /virtualenv.tar.gz
 /env
+/python3
+/python3.zip

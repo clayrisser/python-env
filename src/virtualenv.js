@@ -3,10 +3,14 @@ import crossSpawn from 'cross-spawn';
 import fetch from 'fetch-everywhere';
 import fs from 'fs';
 import glob from 'glob';
-import pkgDir from 'pkg-dir';
 import ora from 'ora';
 import path from 'path';
+import pkgDir from 'pkg-dir';
 import tar from 'tar';
+import unzip from 'unzip';
+import { os } from 'js-info'
+
+const { env } = process;
 
 export default class Virtualenv {
   constructor({
@@ -34,7 +38,72 @@ export default class Virtualenv {
     this.spinner.start('extracting virtualenv');
     this.installerPath = await this.extract();
     this.spinner.succeed('extracted virtualenv');
-    await this.env();
+    const pythonPath = await this.installPython();
+    await this.env(pythonPath);
+  }
+
+  async installPython() {
+    if (os.win) {
+      let pythonDownload = 'https://www.python.org/ftp/python/3.7.1/python-3.7.1-embed-win32.zip';
+      if (os.win64) {
+        pythonDownload = 'https://www.python.org/ftp/python/3.7.1/python-3.7.1-embed-amd64.zip';
+      }
+      const res = await fetch(pythonDownload);
+      if (!res.ok) throw new Err('failed to get python', res.status);
+      const stream = fs.createWriteStream(path.resolve(this.output, 'python3.zip'));
+      await new Promise((resolve, reject) => {
+        res.body.pipe(stream);
+        res.body.on('err', reject);
+        res.body.on('finish', resolve);
+      });
+      await new Promise((resolve, reject) => {
+        const stream = fs.createReadStream(
+          path.resolve(this.output, 'python3.zip')
+        ).pipe(unzip.Extract({
+          path: path.resolve(this.output, 'python3')
+        }));
+        stream.on('close', resolve);
+        stream.on('error', reject);
+      });
+      return path.resolve(this.output, 'python3/python.exe');
+    }
+      const hasPython = await new Promise((resolve, reject) => {
+        const cp = crossSpawn('where python')
+        let message = ''
+        cp.stdout.on('data', (data) => {
+          message += data.toString();
+        });
+        cp.on('close', () => {
+          return resolve(message);
+        });
+        cp.on('error', () => {
+          return resolve(null);
+        });
+      });
+      if (hasPython) return null;
+      const pythonPath = path.resolve(
+        env.USERPROFILE,
+        '.windows-build-tools/python27/python.exe'
+      );
+      if (fs.existsSync(pythonPath)) return null;
+      this.spinner.start('installing python');
+      crossSpawn(
+        'call',
+        [
+          path.resolve(__dirname, '../tools/elevate.bat'),
+          'npm\ install\ --global\ --production\ windows-build-tools'
+        ]
+      );
+      let installed = false;
+      while(!installed) {
+        if (fs.existsSync(pythonPath)) {
+          await new Promise(r => setTimeout(r, 1000));
+          installed = true;
+        }
+      }
+      await new Promise(r => setTimeout(r, 5000));
+      this.spinner.succeed('installed python');
+    }
   }
 
   async download() {
@@ -77,12 +146,12 @@ export default class Virtualenv {
     });
   }
 
-  async env() {
+  async env(pythonPath) {
     return crossSpawn(
-      'python',
+      pythonPath || 'python',
       [
         path.resolve(this.installerPath, 'src/virtualenv.py'),
-        ...(this.version === '3' ? ['-p', 'python3'] : []),
+        ...(!os.win && this.version === '3' ? ['-p', 'python3'] : []),
         'env'
       ],
       { stdio: 'inherit' }

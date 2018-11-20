@@ -1,3 +1,4 @@
+import 'idempotent-babel-polyfill';
 import Virtualenv from './virtualenv';
 import python from './python';
 import pip from './pip';

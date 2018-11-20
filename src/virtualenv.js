@@ -7,7 +7,7 @@ import ora from 'ora';
 import path from 'path';
 import pkgDir from 'pkg-dir';
 import tar from 'tar';
-import { os } from 'js-info'
+import { os } from 'js-info';
 
 const { env } = process;
 
@@ -73,6 +73,7 @@ export default class Virtualenv {
           res.body.on('err', reject);
           res.body.on('finish', resolve);
         });
+        await new Promise(r => setTimeout(r, 1000));
         this.spinner.succeed('downloaded miniconda');
       }
       this.spinner.start('installing miniconda');
@@ -131,10 +132,7 @@ export default class Virtualenv {
 
   async getVirtualenvPath() {
     return new Promise((resolve, reject) => {
-      glob(path.resolve(
-        this.output,
-        'pypa-virtualenv-*'
-      ), {}, (err, files) => {
+      glob(path.resolve(this.output, 'pypa-virtualenv-*'), {}, (err, files) => {
         if (err) return reject(err);
         if (!files || !files.length) return resolve(null);
         return resolve(files[0]);

@@ -60,7 +60,7 @@ export default class Virtualenv {
   async ensurePython() {
     if (os.win) {
       const pythonPath = path.resolve(env.USERPROFILE, 'Miniconda3/python.exe');
-      if (fs.existsSync(path.resolve(env.USERPROFILE, 'Miniconda3'))) return pythonPath;
+      if (fs.existsSync(pythonPath)) return pythonPath;
       if (!fs.existsSync(path.resolve(this.output, 'miniconda.exe'))) {
         this.spinner.start('downloading miniconda');
         let res = await fetch(this.minicondaInstaller);
@@ -91,8 +91,9 @@ export default class Virtualenv {
         cp.on('error', reject);
       });
       this.spinner.succeed('installed miniconda');
+      return pythonPath;
     }
-    return pythonPath;
+    return null;
   }
 
   async download() {

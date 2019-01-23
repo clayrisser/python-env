@@ -14,7 +14,7 @@ const { env } = process;
 export default class Virtualenv {
   constructor({
     virtualenvVersion = '16.1.0',
-    version = '2',
+    version = '3',
     output = path.resolve(pkgDir.sync(__dirname)),
     spinner = true
   }) {

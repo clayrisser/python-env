@@ -1,3 +1,6 @@
 {
-  "extends": ["jam"]
+  "extends": ["jam"],
+  "rules": {
+    "import/no-unresolved": ["error", { "ignore": ["python-env"] }]
+  }
 }

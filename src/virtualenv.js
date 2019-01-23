@@ -55,6 +55,7 @@ export default class Virtualenv {
     this.spinner.start('extracting virtualenv');
     await this.extract();
     this.spinner.succeed('extracted virtualenv');
+    return null;
   }
 
   async ensurePython() {
@@ -63,9 +64,9 @@ export default class Virtualenv {
       if (fs.existsSync(pythonPath)) return pythonPath;
       if (!fs.existsSync(path.resolve(this.output, 'miniconda.exe'))) {
         this.spinner.start('downloading miniconda');
-        let res = await fetch(this.minicondaInstaller);
+        const res = await fetch(this.minicondaInstaller);
         if (!res.ok) throw new Err('failed to download miniconda', res.status);
-        let stream = fs.createWriteStream(
+        const stream = fs.createWriteStream(
           path.resolve(this.output, 'miniconda.exe')
         );
         await new Promise((resolve, reject) => {

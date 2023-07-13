@@ -4,6 +4,8 @@
 
 > Cross platform isolated embedded python environment for npm
 
+![](assets/python-env.jpg)
+
 Please ★ this repo if you found it useful ★ ★ ★
 
 
